@@ -10,8 +10,33 @@
 
         <div class="mt-8 flex flex-col justify-between">
             <header>
-                <div class="space-x-2">
+                <div class="space-x-2 flex">
                     <x-category-link :category="$post->category"/>
+
+                    @auth
+                        @if($post->like_exists)
+                            <form action="{{ route('post.like.destroy', $post) }}" method="post">
+                                @csrf
+                                @method('DELETE')
+                                <button
+                                    class="px-3 py-2 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150 text-xs uppercase font-extrabold bg-blue-500 text-pink-300 hover:text-white hover:bg-blue-500 border border-blue-500"
+                                    type="submit"
+                                >
+                                    <i class="fas fa-heart"></i> Liked ( {{ $post->like->count() }} )
+                                </button>
+                            </form>
+                        @else
+                            <form action="{{ route('post.like.store', $post) }}" method="post">
+                                @csrf
+                                <button
+                                    class="px-3 py-2 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150 text-xs uppercase font-extrabold bg-blue-500 hover:text-pink-300 text-white border border-blue-500"
+                                    type="submit"
+                                >
+                                    <i class="fas fa-heart"></i> Like ( {{ $post->like->count() }} )
+                                </button>
+                            </form>
+                        @endif
+                    @endauth
                 </div>
 
                 <div class="mt-4">
@@ -36,6 +61,12 @@
                 <p>
                     {{ $post->comments->count() }} Comments
                 </p>
+            </div>
+
+            <div class="text-sm mt-4 font-bold">
+                <h5 class="font-bold">
+                    Viewed {{ $post->views }} times
+                </h5>
             </div>
 
             <footer class="flex justify-between items-center mt-8">

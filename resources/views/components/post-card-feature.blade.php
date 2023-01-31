@@ -4,18 +4,44 @@
     class="transition-colors duration-300 hover:bg-gray-100 border border-black border-opacity-0 hover:border-opacity-5 rounded-xl">
     <div class="py-6 px-5 lg:flex">
         <div class="flex-1 lg:mr-8">
-            {{-- TODO: Add image --}}
-            <img src="../images/illustration-1.png" alt="Blog Post illustration" class="rounded-xl">
+            <img src="{{ asset('storage/' . $post->thumbnail) }}" alt="Blog Post illustration" class="rounded-xl">
         </div>
 
         <div class="flex-1 flex flex-col justify-between">
             <header class="mt-8 lg:mt-0">
-                <div class="space-x-2">
+                <div class="space-x-2 flex justify-end">
                     <x-category-link :category="$post->category"/>
 
-                    <a href="#"
-                       class="px-3 py-1 border border-red-300 rounded-full text-red-300 text-xs uppercase font-semibold"
-                       style="font-size: 10px">Updates</a>
+                    @auth
+                        @if($post->like_exists)
+                            <form action="{{ route('post.like.destroy', $post) }}" method="post">
+                                @csrf
+                                @method('DELETE')
+                                <button
+                                    class="px-3 py-2 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150 text-xs uppercase font-extrabold bg-blue-500 text-pink-300 hover:text-white hover:bg-blue-500 border border-blue-500"
+                                    type="submit"
+                                >
+                                    <i class="fas fa-heart"></i> Liked ( {{ $post->like->count() }} )
+                                </button>
+                            </form>
+                        @else
+                            <form action="{{ route('post.like.store', $post) }}" method="post">
+                                @csrf
+                                <button
+                                    class="px-3 py-2 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150 text-xs uppercase font-extrabold bg-blue-500 hover:text-pink-300 text-white border border-blue-500"
+                                    type="submit"
+                                >
+                                    <i class="fas fa-heart"></i> Like ( {{ $post->like->count() }} )
+                                </button>
+                            </form>
+                        @endif
+                    @elseauth
+                        <a href="{{ route('login') }}"
+                           class="px-3 py-2 rounded-full shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150 text-xs uppercase font-extrabold bg-blue-500 hover:text-pink-300 text-white border border-blue-500"
+                        >
+                            <i class="fas fa-heart"></i> Like ( {{ $post->like->count() }} )
+                        </a>
+                    @endauth
                 </div>
 
                 <div class="mt-4">
@@ -32,7 +58,7 @@
             </header>
 
             <div class="text-sm mt-2 space-y-4">
-                    {!! $post->excerpt !!}
+                {!! $post->excerpt !!}
             </div>
 
             <footer class="flex justify-between items-center mt-8">
@@ -50,6 +76,11 @@
                 <div class="text-sm">
                     <h5 class="font-bold">
                         {{ $post->comments->count() }} Comments
+                    </h5>
+                </div>
+                <div class="text-sm">
+                    <h5 class="font-bold">
+                        Viewed {{ $post->views }} times
                     </h5>
                 </div>
 

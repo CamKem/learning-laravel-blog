@@ -14,10 +14,13 @@ return new class extends Migration {
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->string('post_id')->constrained();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('post_id')->constrained()->cascadeOnDelete();
             $table->text('body');
             $table->timestamps();
+
+            //new code for polymorphic relationship
+            //$table->foreignIdFor(User::class)->constrained();
         });
     }
 

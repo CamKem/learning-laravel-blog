@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 
-class AdminsOnly
+class MustBeAdmin
 {
     /**
      * Handle an incoming request.
@@ -16,6 +16,11 @@ class AdminsOnly
      */
     public function handle(Request $request, Closure $next)
     {
+
+        if (auth()->user()?->cannot('admin')) {
+            return redirect(route('home'));
+        }
+
         return $next($request);
     }
 }

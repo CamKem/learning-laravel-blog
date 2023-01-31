@@ -13,17 +13,17 @@ class PostFactory extends Factory
 {
     use Sluggable;
 
-    public function getFakeData(Generator $faker)
-    {
-        $paragraphs = rand(1, 5);
-        $i = 0;
-        $ret = "";
-        while ($i < $paragraphs) {
-            $ret .= "<p>" . $faker->paragraph(rand(2, 6)) . "</p>";
-            $i++;
-        }
-        return $ret;
-    }
+    //public function getFakeData(Generator $faker)
+    //{
+    //    $paragraphs = rand(1, 5);
+    //    $i = 0;
+    //    $ret = "";
+    //    while ($i < $paragraphs) {
+    //        $ret .= "<p>" . $faker->paragraph(rand(2, 6)) . "</p>";
+    //        $i++;
+    //   }
+    //    return $ret;
+    //}
 
     public function definition(): array
     {
@@ -36,6 +36,8 @@ class PostFactory extends Factory
             //'category_id' => Category::factory(),
             //'user_id' => User::factory(),
             'title' => fake()->sentence(6),
+            'thumbnail' => 'thumbnails/IiCHahGN6CdTBSJPPw2utyuC5cjhS2YlS3EqWZwl.jpg',
+            'published' => fake()->boolean(80),
             'body' => '<p>' . implode('</p><p>', fake()->paragraphs(6)) . '</p>',
             'excerpt' => '<p>' . implode('</p><p>', fake()->paragraphs(3)) . '</p>',
         ];

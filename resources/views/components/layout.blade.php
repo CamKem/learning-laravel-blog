@@ -1,37 +1,24 @@
 <!doctype html>
 
-<title>Aurified: {{ $title }}</title>
+<head>
+    <title>Aurified: {{ $title }}</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="csrf-token" content="{{ csrf_token() }}">
-<meta name="description" content="Aurified is a social media platform for Gold Mining & Prospecting.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Aurified is a social media platform for Gold Mining & Prospecting.">
 
-<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-<link rel="preconnect" href="https://fonts.gstatic.com">
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@themesberg/flowbite@1.1.0/dist/flowbite.min.css"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script src="https://kit.fontawesome.com/d24a02256d.js" crossorigin="anonymous"></script>
+</head>
 
-<body
-    style="font-family: Open Sans, sans-serif"
-    x-data="{'isModalOpen': false}" x-on:keydown.escape="isModalOpen=false"
->
+<body style="font-family: Open Sans, sans-serif">
 
-@auth
-    <div class="container font-bold text-xl py-3 px-3">
-        @include('flash::message')  <!-- This is the flash message -->
-    </div>
-@endauth
-
-<!-- If using flash()->important() or flash()->overlay(), you'll need to pull in the JS for Twitter Bootstrap. -->
-<script src="//code.jquery.com/jquery.js"></script>
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-
-<script>
-    $('#flash-overlay-modal').modal();
-</script>
-
-<section class="px-6 py-8">
-    <nav class="md:flex md:justify-between md:items-center">
+<section class="px-4 py-4">
+    <nav class="md:flex md:justify-between rounded-xl py-4 px-8 bg-gray-100 md:items-center">
         <div>
             <a href="/">
                 <img src="/images/logo.svg" alt="Laracasts Logo" width="165" height="16">
@@ -40,20 +27,50 @@
 
         <div class="mt-8 md:mt-0 flex items-center">
             @guest
-                <a href="{{ route('register') }}" class="text-xs font-bold uppercase">Register</a>
-                <a href="{{ route('login') }}"
-                   class="bg-blue-500 ml-3 rounded-full text-xs font-semibold text-white uppercase py-3 px-5">Login</a>
+                <div class="">
+                    <a href="{{ route('login') }}"
+                       class="text-xs font-bold uppercase">Login</a>
+                </div>
+                <div class="ml-4">
+                    <a href="{{ route('register') }}"
+                       class="text-xs font-bold uppercase">Register</a>
+                </div>
             @endguest
             @auth
-                <span
-                    class="text-xs font-bold uppercase">Welcome, {{ auth()->user()->firstname }} {{ auth()->user()->lastname }}</span>
-                <form id="logout-form" method='post' action="/logout" class="hidden">
+                <x-dropdown>
+                    <x-slot name="trigger">
+                        <button
+                            class="text-xs font-bold uppercase text-xs py-3 px-3">
+                            Welcome, {{ auth()->user()->firstname }} {{ auth()->user()->lastname }}!
+                        </button>
+                    </x-slot>
+
+                    @if (auth()->user()->can('admin'))
+                        @admin
+                        <x-dropdown-item href="/admin/posts" :active="request()->routeIs('dashboard')">
+                            Dashboard
+                        </x-dropdown-item>
+                        <x-dropdown-item href="/admin/posts/create" :active="request()->is('admin/posts/create')">
+                            New Post
+                        </x-dropdown-item>
+                        @endadmin
+                    @endif
+                    <x-dropdown-item href="#"
+                                     x-data="{}"
+                                     class="border-t-4 border-gray-300"
+                                     :active="request()->routeIs('logout')"
+                                     @click.prevent="document.querySelector('#logout-form').submit()">Log Out
+                    </x-dropdown-item>
+                </x-dropdown>
+
+                <form id="logout-form" method='post' action="{{ route('logout') }}" class="hidden">
                     @csrf
                 </form>
-                <a href="{{ route('logout') }}"
-                   class="bg-blue-500 ml-3 rounded-full text-xs font-semibold text-white uppercase py-3 px-5"
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
             @endauth
+            <a href="#newsletter"
+               class="bg-blue-500 text-xs font-semibold text-white scroll-smooth uppercase py-3 px-5 rounded-full ml-3">
+                Subscribe for Updates
+            </a>
         </div>
     </nav>
 
@@ -65,17 +82,24 @@
         <p class="text-sm mt-3">Promise to keep the inbox clean. No bugs.</p>
 
         <div class="mt-10">
-            <div class="relative inline-block mx-auto lg:bg-gray-200 rounded-full">
+            <div class="relative h-11 inline-block mx-auto lg:bg-gray-200 rounded-full">
 
-                <form method="POST" action="#" class="lg:flex text-sm">
+                <form method="POST" action="{{ route('newsletter') }}" class="lg:flex text-sm">
+                    @csrf
                     <div class="lg:py-3 lg:px-5 flex items-center">
                         <label for="email" class="hidden lg:inline-block">
                             <img src="/images/mailbox-icon.svg" alt="mailbox letter">
                         </label>
 
-                        <input id="email" type="text" placeholder="Your email address"
-                               class="lg:bg-transparent py-2 lg:py-0 pl-4 focus-within:outline-none">
+                        <input id="newsletter"
+                               name="email"
+                               type="text"
+                               placeholder="Your email address"
+                               class="lg:bg-transparent border-0 py-2 lg:py-0 pl-4 focus-within:outline-none">
                     </div>
+                    @error('email')
+                    <span class="text-red-500 text-xs mt-2">{{ $message }}</span>
+                    @enderror
 
                     <button type="submit"
                             class="transition-colors duration-300 bg-blue-500 hover:bg-blue-600 mt-4 lg:mt-0 lg:ml-3 rounded-full text-xs font-semibold text-white uppercase py-3 px-8"
@@ -88,10 +112,19 @@
     </footer>
 </section>
 
-@if (session()->has('alert'))
+@if (session()->has('error'))
     @php
         $colour = "fixed bg-red-500";
-        $position = "top-5 right-5";
+        $position = "bottom-5 right-5";
+    @endphp
+    <x-flash-message type="error" :colour="$colour" :position="$position" :message="session('error')"/>
+@endif
+
+
+@if (session()->has('alert'))
+    @php
+        $colour = "fixed bg-yellow-500";
+        $position = "bottom-5 right-5";
     @endphp
     <x-flash-message type="alert" :colour="$colour" :position="$position" :message="session('alert')"/>
 @endif

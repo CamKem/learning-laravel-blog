@@ -2,9 +2,21 @@
 
 namespace App\Http\Controllers;
 
-class NewsletterController extends Controller{
-    public function index()
+use App\Services\Newsletter;
+use Exception;
+
+class NewsletterController extends Controller
+{
+    public function __invoke(Newsletter $newsletter)
     {
-        //
+        request()->validate(['email' => 'required|email']);
+
+        try {
+            $newsletter->subscribe(request('email'));
+        } catch (Exception $e) {
+            return redirect('/')->with('error', 'This email could not be added to our newsletter list.');
+        }
+
+        return redirect('/')->with('success', 'Thanks for signing up to our newsletter!');
     }
 }

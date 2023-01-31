@@ -5,101 +5,57 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class PostController extends Controller
 {
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required',
-            'body' => 'required',
-            'user_id' => 'required',
-        ]);
-
-        $post = new Post();
-        $post->title = $request->title;
-        $post->body = $request->body;
-        $post->user_id = $request->user_id;
-        $post->save();
-
-        return redirect()->back();
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'title' => 'required',
-            'body' => 'required',
-            'user_id' => 'required',
-        ]);
-
-        $post = Post::find($id);
-        $post->title = $request->title;
-        $post->body = $request->body;
-        $post->user_id = $request->user_id;
-        $post->save();
-
-        return redirect()->back();
-    }
-
-    public function destroy($id)
-    {
-        $post = Post::find($id);
-        $post->delete();
-
-        return redirect()->back();
-    }
-
-    public function show(Post $post)
-    {
-        //with('author') for lazy loading to reduce db queries
-        $comments = $post->comments()->with('author')->latest()->simplePaginate(5);
-        return view('posts.show', [
-            'post' => $post,
-            'comments' => $comments
-        ]);
-    }
 
     public function index()
     {
-        flash('Welcome Aboard!');
-
         return view('posts.index', [
-            'posts' => Post::latest()->filter(request(['search', 'category', 'author']))->paginate(6)->withQueryString(),
+            'posts' => Post::latest()
+                ->withExists([
+                    'like' => function($query) {
+                        $query->where('user_id', auth()->id());
+                    }
+                ])
+                ->where('published', true)
+                ->filter(request(['search', 'category', 'author']))
+                ->paginate(6)
+                ->withQueryString(),
+            'categories' => Category::all(),
         ]);
     }
 
-    protected function validatePost()
+     //   return view('posts.index', [
+     ////       'posts' => Post::latest()
+     //           ->where('published', true)
+    //            ->filter(request(['search', 'category', 'author']))
+    //            ->paginate(6)
+     //           ->withQueryString()
+    //            ->withExists(['likes' => function ($query) {
+    //                $query->where('user_id', auth()->id());
+    //            }]),
+    //        'categories' => Category::all(),
+    //    ]);
+    //}
+
+    public function show(Post $post)
     {
-        return request()->validate([
-            'title' => 'required',
-            'body' => 'required',
-            'category_id' => 'required',
-            'thumbnail' => 'sometimes|file|image|max:5000'
+        //increment the view count
+        $post->increment('views');
+
+        $post->loadExists([
+            'like' => function($query) {
+                $query->where('user_id', auth()->id());
+            }
+        ]);
+        return view('posts.show', [
+            'post' => $post,
+            'comments' => $post->comments()->with('author')->simplePaginate(5)
         ]);
     }
 
-    protected function storeImage($post)
-    {
-        if (request()->has('thumbnail')) {
-            $post->update([
-                'thumbnail' => request()->thumbnail->store('uploads', 'public')
-            ]);
-        }
-    }
-
-    protected function deleteImage($post)
-    {
-        if ($post->thumbnail) {
-            Storage::delete('/public/' . $post->thumbnail);
-        }
-    }
-
-    protected function storePost()
-    {
-        $post = Post::create($this->validatePost());
-        $this->storeImage($post);
-        return $post;
-    }
 }

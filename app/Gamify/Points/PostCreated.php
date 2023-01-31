@@ -6,6 +6,7 @@ use QCod\Gamify\PointType;
 
 class PostCreated extends PointType
 {
+
     /**
      * Number of points
      *

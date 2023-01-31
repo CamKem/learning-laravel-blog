@@ -1,7 +1,11 @@
 @props(['posts'])
-@props(['firstpost'])
 
-<x-post-card-feature :post="$posts[0]"/>
+@if ($posts->currentPage() === 1)
+    <x-post-card-feature :post="$posts[0]"/>
+@elseif(!$posts->hasPages())
+    <x-post-card-feature :post="$posts[0]"/>
+@endif
+
 @if($posts->count() > 1)
     <div class="lg:grid lg:grid-cols-6">
         @foreach ($posts->skip(1) as $post)
@@ -11,11 +15,8 @@
             />
         @endforeach
     </div>
-@else
-    <p class="text-center">
-        Sorry, there is no posts yet.
-    </p>
 @endif
+
 @if($posts->hasPages())
     <div class="flex-1 flex flex-col justify-between">
         <links class="mt-8 lg:mt-0">
