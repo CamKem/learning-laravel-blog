@@ -72,8 +72,17 @@
 name: Automatic Laravel Update
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'  # Run every Sunday at midnight UTC (adjust as needed)
+    push:
+        branches:
+        - develop
+        paths:
+        - 'composer.json'
+        - '.github/workflows/update-laravel.yml'
+env:
+    needs-update: false
+
+#  schedule:
+#    - cron: '0 0 * * 0' # Run every Sunday at midnight UTC (adjust as needed)
 
 jobs:
   update-laravel:
