@@ -72,17 +72,15 @@
 name: Automatic Laravel Update
 
 on:
-    push:
-        branches:
-        - develop
-        paths:
-        - 'composer.json'
-        - '.github/workflows/update-laravel.yml'
-env:
-    needs-update: false
+  push:
+    branches:
+      - develop
+    paths:
+      - 'composer.json'
+      - '.github/workflows/update-laravel.yml'
 
-#  schedule:
-#    - cron: '0 0 * * 0' # Run every Sunday at midnight UTC (adjust as needed)
+env:
+  LARAVEL_VERSION: ""
 
 jobs:
   update-laravel:
@@ -99,23 +97,23 @@ jobs:
 
       - name: Get Latest Laravel Version
         id: get-laravel-version
-        run: echo "::set-output name=version::$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)"
+        run: echo "LARAVEL_VERSION=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)" >> $GITHUB_ENV
 
       - name: Compare Laravel Versions
         id: compare-laravel-versions
         run: |
           installed_version=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)
-          latest_version=${{ steps.get-laravel-version.outputs.version }}
+          latest_version=${{ env.LARAVEL_VERSION }}
           if [ "$(php -r "echo version_compare('$installed_version', '$latest_version', '<');")" = "1" ]; then
-            echo "needs-update=true" >> $GITHUB_ENV
+            echo "NEEDS_UPDATE=true" >> $GITHUB_ENV
           else
-            echo "needs-update=false" >> $GITHUB_ENV
+            echo "NEEDS_UPDATE=false" >> $GITHUB_ENV
           fi
 
       - name: Update Composer.json and Create PR
-        if: env.needs-update == 'true'
+        if: env.NEEDS_UPDATE == 'true'
         run: |
-          latest_version=${{ steps.get-laravel-version.outputs.version }}
+          latest_version=${{ env.LARAVEL_VERSION }}
           echo "Updating Laravel to version $latest_version in composer.json"
           sed -i "s/\"laravel\/framework\": \".*\"/\"laravel\/framework\": \"^$latest_version\"/" composer.json
 
