@@ -14,7 +14,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2.5.0  # Update to a version that supports Node.js 16
+        uses: actions/checkout@v2.5.0
+        with:
+          # Explicitly set node-version to ensure Node.js 16 is used
+          node-version: 16
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
