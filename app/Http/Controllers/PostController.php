@@ -14,17 +14,21 @@ class PostController extends Controller
 
     public function index()
     {
+
+        $posts = Post::latest()
+            ->withExists([
+                'like' => function($query) {
+                    $query->where('user_id', auth()->id());
+                }
+            ])
+            ->where('published', true)
+            ->filter(request(['search', 'category', 'author']))
+            ->paginate(6)
+            ->withQueryString();
+
         return view('posts.index', [
-            'posts' => Post::latest()
-                ->withExists([
-                    'like' => function($query) {
-                        $query->where('user_id', auth()->id());
-                    }
-                ])
-                ->where('published', true)
-                ->filter(request(['search', 'category', 'author']))
-                ->paginate(6)
-                ->withQueryString(),
+            'posts' => $posts,
+            //dd($posts),
             'categories' => Category::all(),
         ]);
     }
@@ -57,5 +61,6 @@ class PostController extends Controller
             'comments' => $post->comments()->with('author')->simplePaginate(5)
         ]);
     }
+
 
 }

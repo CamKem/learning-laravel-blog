@@ -43,6 +43,7 @@ class AdminPostController extends Controller
 
         $attributes['user_id'] = auth()->id();
 
+        // add thumbnail & store it
         $attributes['thumbnail'] = request('thumbnail')->store('thumbnails');
 
         //FROM HERE WE CAN USE REPUTATION SYSTEM

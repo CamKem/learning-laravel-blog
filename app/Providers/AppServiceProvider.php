@@ -46,5 +46,9 @@ class AppServiceProvider extends ServiceProvider
         Blade::if('admin', function () {
             return request()->user()?->can('admin');
         });
+
+        Blade::if('authv', function () {
+            return auth()->check() && auth()->user()->hasVerifiedEmail();
+        });
     }
 }
