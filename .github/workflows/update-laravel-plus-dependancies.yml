@@ -16,8 +16,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2.5.0
         with:
-          # Explicitly set node-version to ensure Node.js 16 is used
-          node-version: 16
+          submodules: 'recursive'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
