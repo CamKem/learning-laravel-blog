@@ -1,70 +1,118 @@
-# This is a workflow that will be used to automatically update the dependencies
-# It will create a new PR if there are any changes
+## This is a workflow that will be used to automatically update the dependencies
+## It will create a new PR if there are any changes
+#
+#name: Update Laravel & Dependencies
+#
+#on:
+#  push:
+#    branches:
+#      - develop
+#
+#jobs:
+#  update-laravel:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '16'
+#
+#      - name: Checkout Repository
+#        uses: actions/checkout@v2.5.0
+#        with:
+#          submodules: 'recursive'
+#
+#      - name: Set up PHP
+#        uses: shivammathur/setup-php@v2
+#        with:
+#          php-version: '8.2'
+#
+#      - name: Install Composer Dependencies
+#        run: composer install
+#
+#      - name: Get Latest Laravel Version
+#        id: get-laravel-version
+#        run: echo "version=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)" >> $GITHUB_ENV
+#
+#      - name: Check Laravel Version
+#        id: check-laravel-version
+#        run: |
+#          if [ "$(php -r "echo version_compare('${{ steps.get-laravel-version.outputs.version }}', '$version', '>');")" = "1" ]; then
+#            echo "is-larger=true" >> $GITHUB_ENV
+#          else
+#            echo "is-larger=false" >> $GITHUB_ENV
+#          fi
+#
+#      - name: Update Laravel
+#        if: env.is-larger == 'true'
+#        run: |
+#          laravel_version=${{ steps.get-laravel-version.outputs.version }}
+#          composer require "laravel/framework:${laravel_version}"
+#          composer update --with-all-dependencies --ignore-platform-reqs --no-interaction --no-plugins --no-scripts --prefer-dist
+#
+#      - name: Create Branch and Push Changes
+#        if: env.is-larger == 'true'
+#        run: |
+#          branch_name="laravel-${{ steps.get-laravel-version.outputs.version }}"
+#          git checkout -b $branch_name
+#          git add .
+#          git commit -m "Update Laravel to version ${{ steps.get-laravel-version.outputs.version }}"
+#          git push origin $branch_name
+#
+#      - name: Create Pull Request
+#        if: env.is-larger == 'true'
+#        uses: peter-evans/create-pull-request@v3
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          commit-message: "Update Laravel to version ${{ steps.get-laravel-version.outputs.version }}"
+#          title: "Update Laravel to version ${{ steps.get-laravel-version.outputs.version }}"
+#          branch: "laravel-${{ steps.get-laravel-version.outputs.version }}"
 
-name: Update Laravel & Dependencies
+name: Automatic Laravel Update
 
 on:
-  push:
-    branches:
-      - develop
+  schedule:
+    - cron: '0 0 * * 0'  # Run every Sunday at midnight UTC (adjust as needed)
 
 jobs:
   update-laravel:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '16'
-
       - name: Checkout Repository
-        uses: actions/checkout@v2.5.0
-        with:
-          submodules: 'recursive'
+        uses: actions/checkout@v2
 
-      - name: Set up PHP
+      - name: Set up PHP and Composer
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
 
-      - name: Install Composer Dependencies
-        run: composer install
-
       - name: Get Latest Laravel Version
         id: get-laravel-version
-        run: echo "version=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)" >> $GITHUB_ENV
+        run: echo "::set-output name=version::$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)"
 
-      - name: Check Laravel Version
-        id: check-laravel-version
+      - name: Compare Laravel Versions
+        id: compare-laravel-versions
         run: |
-          if [ "$(php -r "echo version_compare('${{ steps.get-laravel-version.outputs.version }}', '$version', '>');")" = "1" ]; then
-            echo "is-larger=true" >> $GITHUB_ENV
+          installed_version=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)
+          latest_version=${{ steps.get-laravel-version.outputs.version }}
+          if [ "$(php -r "echo version_compare('$installed_version', '$latest_version', '<');")" = "1" ]; then
+            echo "needs-update=true" >> $GITHUB_ENV
           else
-            echo "is-larger=false" >> $GITHUB_ENV
+            echo "needs-update=false" >> $GITHUB_ENV
           fi
 
-      - name: Update Laravel
-        if: env.is-larger == 'true'
+      - name: Update Composer.json and Create PR
+        if: env.needs-update == 'true'
         run: |
-          laravel_version=${{ steps.get-laravel-version.outputs.version }}
-          composer require "laravel/framework:${laravel_version}"
-          composer update --with-all-dependencies --ignore-platform-reqs --no-interaction --no-plugins --no-scripts --prefer-dist
+          latest_version=${{ steps.get-laravel-version.outputs.version }}
+          echo "Updating Laravel to version $latest_version in composer.json"
+          sed -i "s/\"laravel\/framework\": \".*\"/\"laravel\/framework\": \"^$latest_version\"/" composer.json
 
-      - name: Create Branch and Push Changes
-        if: env.is-larger == 'true'
-        run: |
-          branch_name="laravel-${{ steps.get-laravel-version.outputs.version }}"
-          git checkout -b $branch_name
-          git add .
-          git commit -m "Update Laravel to version ${{ steps.get-laravel-version.outputs.version }}"
-          git push origin $branch_name
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git commit -am "Update Laravel to version $latest_version"
+          git push origin HEAD:automatic-laravel-update
 
-      - name: Create Pull Request
-        if: env.is-larger == 'true'
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update Laravel to version ${{ steps.get-laravel-version.outputs.version }}"
-          title: "Update Laravel to version ${{ steps.get-laravel-version.outputs.version }}"
-          branch: "laravel-${{ steps.get-laravel-version.outputs.version }}"
+          hub pull-request -m "Automated update to Laravel $latest_version"
