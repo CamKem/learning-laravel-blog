@@ -10,7 +10,7 @@
         "guzzlehttp/guzzle": "^7.5",
         "itsgoingd/clockwork": "^5.1",
         "laracasts/flash": "^3.2",
-        "laravel/framework": "^v10.35.0",
+        "laravel/framework": "^v10.20.1",
         "laravel/sanctum": "^3.2",
 
         "laravel/tinker": "^2.7",
