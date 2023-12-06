@@ -26,27 +26,26 @@ jobs:
 
       - name: Get Latest Laravel Version
         id: get-laravel-version
-        run: echo "::set-output name=version::$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)"
+        run: echo "version=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)" >> $GITHUB_ENV
 
       - name: Check Laravel Version
         id: check-laravel-version
         run: |
-          version=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)
           if [ "$(php -r "echo version_compare('${{ steps.get-laravel-version.outputs.version }}', '$version', '>');")" = "1" ]; then
-            echo "::set-output name=is-larger::true"
+            echo "is-larger=true" >> $GITHUB_ENV
           else
-            echo "::set-output name=is-larger::false"
+            echo "is-larger=false" >> $GITHUB_ENV
           fi
 
       - name: Update Laravel
-        if: steps.check-laravel-version.outputs.is-larger == 'true'
+        if: env.is-larger == 'true'
         run: |
           laravel_version=${{ steps.get-laravel-version.outputs.version }}
           composer require "laravel/framework:${laravel_version}"
           composer update --with-all-dependencies --ignore-platform-reqs --no-interaction --no-plugins --no-scripts --prefer-dist
 
       - name: Create Branch and Push Changes
-        if: steps.check-laravel-version.outputs.is-larger == 'true'
+        if: env.is-larger == 'true'
         run: |
           branch_name="laravel-${{ steps.get-laravel-version.outputs.version }}"
           git checkout -b $branch_name
@@ -55,7 +54,7 @@ jobs:
           git push origin $branch_name
 
       - name: Create Pull Request
-        if: steps.check-laravel-version.outputs.is-larger == 'true'
+        if: env.is-larger == 'true'
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
