@@ -181,7 +181,11 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
-        Collective\Html\HtmlServiceProvider::class,
+        // package removed as is not needed?
+        // laravelcollective/html is deprecated
+        // it was used for the form builder
+        // we can use the blade components instead
+//        Collective\Html\HtmlServiceProvider::class,
 
         /*
          * Package Service Providers...
