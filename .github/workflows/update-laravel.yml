@@ -97,7 +97,7 @@ jobs:
 
       - name: Get Latest Laravel Version
         id: get-laravel-version
-        run: echo "LARAVEL_VERSION=$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)" >> $GITHUB_ENV
+        run: echo "LARAVEL_VERSION={$(composer show laravel/framework --all | grep versions | cut -d ' ' -f 2)"} >> $GITHUB_ENV
 
       - name: Compare Laravel Versions
         id: compare-laravel-versions
